@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -30,6 +31,54 @@ const contacts = [
 ];
 
 export default function Contact() {
+  const [nama, setNama] = useState("");
+  const [email, setEmail] = useState("");
+  const [pesan, setPesan] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    setLoading(true);
+    setStatus("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nama,
+          email,
+          pesan,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setStatus(
+          result.message || "Pesan gagal dikirim. Silakan coba lagi."
+        );
+        return;
+      }
+
+      setStatus("Pesan berhasil dikirim! Terima kasih sudah menghubungi saya.");
+
+      setNama("");
+      setEmail("");
+      setPesan("");
+    } catch (error) {
+      console.error(error);
+      setStatus("Terjadi kesalahan. Silakan coba lagi.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <section
       id="contact"
@@ -39,7 +88,6 @@ export default function Contact() {
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-500/10 blur-[150px]" />
 
       <div className="relative mx-auto max-w-7xl">
-
         {/* Main Contact */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -49,20 +97,16 @@ export default function Contact() {
           className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.02]"
         >
           <div className="grid lg:grid-cols-[1.2fr_.8fr]">
-
             {/* Left */}
             <div className="p-8 sm:p-14 lg:p-20">
-
               <p className="text-sm uppercase tracking-[0.35em] text-fuchsia-400">
                 Get In Touch
               </p>
 
               <h2 className="mt-6 text-5xl font-black leading-[0.9] tracking-tight sm:text-7xl lg:text-8xl">
-                LET'S
+                LET&apos;S
                 <br />
-                <span className="text-fuchsia-400">
-                  TALK.
-                </span>
+                <span className="text-fuchsia-400">TALK.</span>
               </h2>
 
               <p className="mt-8 max-w-xl text-base leading-8 text-white/40 sm:text-lg">
@@ -72,22 +116,101 @@ export default function Contact() {
                 teknologi.
               </p>
 
-              <a
-                href="mailto:shintya@example.com"
-                className="group mt-10 inline-flex items-center gap-3 rounded-full bg-fuchsia-400 px-7 py-4 font-semibold text-black transition duration-300 hover:scale-105 hover:bg-fuchsia-300"
-              >
-                Send Me a Message
+              {/* Contact Form */}
+              <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+                {/* Nama */}
+                <div>
+                  <label
+                    htmlFor="nama"
+                    className="mb-2 block text-sm text-white/50"
+                  >
+                    Nama
+                  </label>
 
-                <ArrowUpRight
-                  size={18}
-                  className="transition group-hover:rotate-45"
-                />
-              </a>
+                  <input
+                    id="nama"
+                    type="text"
+                    value={nama}
+                    onChange={(e) => setNama(e.target.value)}
+                    placeholder="Nama kamu"
+                    required
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400/60"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="mb-2 block text-sm text-white/50"
+                  >
+                    Email
+                  </label>
+
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="email@kamu.com"
+                    required
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400/60"
+                  />
+                </div>
+
+                {/* Pesan */}
+                <div>
+                  <label
+                    htmlFor="pesan"
+                    className="mb-2 block text-sm text-white/50"
+                  >
+                    Pesan
+                  </label>
+
+                  <textarea
+                    id="pesan"
+                    value={pesan}
+                    onChange={(e) => setPesan(e.target.value)}
+                    placeholder="Tulis pesan kamu..."
+                    rows={5}
+                    required
+                    className="w-full resize-none rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400/60"
+                  />
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group inline-flex items-center gap-3 rounded-full bg-fuchsia-400 px-7 py-4 font-semibold text-black transition duration-300 hover:scale-105 hover:bg-fuchsia-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  {loading ? "Sending..." : "Send Message"}
+
+                  {!loading && (
+                    <ArrowUpRight
+                      size={18}
+                      className="transition group-hover:rotate-45"
+                    />
+                  )}
+                </button>
+
+                {/* Status */}
+                {status && (
+                  <p
+                    className={`text-sm ${
+                      status.includes("berhasil")
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {status}
+                  </p>
+                )}
+              </form>
             </div>
 
             {/* Right */}
             <div className="border-t border-white/10 p-8 sm:p-14 lg:border-l lg:border-t-0 lg:p-12">
-
               <p className="text-xs uppercase tracking-[0.3em] text-white/30">
                 Contact Information
               </p>
@@ -127,7 +250,6 @@ export default function Contact() {
                   );
                 })}
               </div>
-
             </div>
           </div>
         </motion.div>
@@ -144,10 +266,9 @@ export default function Contact() {
           </p>
 
           <p className="mt-4 text-2xl font-bold text-white/70 sm:text-3xl">
-            Let's turn it into something amazing.
+            Let&apos;s turn it into something amazing.
           </p>
         </motion.div>
-
       </div>
     </section>
   );

@@ -83,6 +83,8 @@ export default function Home() {
     useState<ProjectFilter>("All");
 
   const [messageSent, setMessageSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [messageError, setMessageError] = useState("");
 
   const filteredProjects = projects.filter((project) => {
     const query = searchQuery.toLowerCase().trim();
@@ -106,17 +108,60 @@ export default function Home() {
     setActiveFilter("All");
   };
 
-  const handleSubmit = (
+  const handleSubmit = async (
     e: React.FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
 
-    setMessageSent(true);
-    e.currentTarget.reset();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
-    setTimeout(() => {
-      setMessageSent(false);
-    }, 4000);
+    const nama = String(formData.get("nama") || "").trim();
+    const email = String(formData.get("email") || "").trim();
+    const pesan = String(formData.get("pesan") || "").trim();
+
+    setSending(true);
+    setMessageSent(false);
+    setMessageError("");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nama,
+          email,
+          pesan,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setMessageError(
+          result.message ||
+            "Pesan gagal dikirim. Silakan coba lagi."
+        );
+        return;
+      }
+
+      setMessageSent(true);
+      form.reset();
+
+      setTimeout(() => {
+        setMessageSent(false);
+      }, 5000);
+    } catch (error) {
+      console.error("Contact form error:", error);
+
+      setMessageError(
+        "Terjadi kesalahan saat mengirim pesan. Silakan coba lagi."
+      );
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -127,8 +172,6 @@ export default function Home() {
 
       <nav className="fixed inset-x-0 top-0 z-[9999] w-full border-b border-white/10 bg-black/95 backdrop-blur-xl">
         <div className="mx-auto flex h-[72px] w-full max-w-7xl items-center justify-between px-5 sm:px-6">
-          {/* LOGO */}
-
           <a
             href="#home"
             onClick={() => setMenuOpen(false)}
@@ -137,8 +180,6 @@ export default function Home() {
             Shintya
             <span className="text-fuchsia-400">.</span>
           </a>
-
-          {/* DESKTOP NAV */}
 
           <div className="hidden items-center gap-8 md:flex lg:gap-10">
             <a
@@ -170,8 +211,6 @@ export default function Home() {
             </a>
           </div>
 
-          {/* DESKTOP BUTTON */}
-
           <a
             href="#contact"
             className="hidden rounded-full border border-fuchsia-400/50 px-5 py-2.5 text-sm font-medium transition hover:bg-fuchsia-400 hover:text-black md:block"
@@ -179,26 +218,16 @@ export default function Home() {
             Let&apos;s Talk
           </a>
 
-          {/* MOBILE BUTTON */}
-
           <button
             type="button"
-            onClick={() =>
-              setMenuOpen((prev) => !prev)
-            }
+            onClick={() => setMenuOpen((prev) => !prev)}
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
             className="relative z-[10000] flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl border border-white/10 text-white md:hidden"
           >
-            {menuOpen ? (
-              <X size={22} />
-            ) : (
-              <Menu size={22} />
-            )}
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
-
-        {/* MOBILE MENU */}
 
         {menuOpen && (
           <div className="relative z-[9999] border-t border-white/10 bg-black px-5 py-5 md:hidden">
@@ -255,15 +284,10 @@ export default function Home() {
         id="home"
         className="relative flex min-h-screen w-full items-center px-5 pb-16 pt-28 sm:px-6 sm:pt-32"
       >
-        {/* BACKGROUND */}
-
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-[40%] top-[10%] h-64 w-64 rounded-full bg-fuchsia-500/20 blur-[100px] sm:h-96 sm:w-96" />
-
           <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-purple-500/10 blur-[100px]" />
         </div>
-
-        {/* GRID */}
 
         <div className="pointer-events-none absolute inset-0 opacity-[0.07]">
           <div
@@ -277,8 +301,6 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* HERO TEXT */}
-
           <div className="min-w-0 text-center lg:text-left">
             <p className="text-xs uppercase tracking-[0.25em] text-fuchsia-400 sm:text-sm sm:tracking-[0.35em]">
               Creative Web Developer
@@ -321,8 +343,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* HERO IMAGE */}
-
           <div className="relative mx-auto flex aspect-square w-full max-w-[280px] items-center justify-center sm:max-w-[380px] md:max-w-[430px]">
             <div className="pointer-events-none absolute inset-0 animate-[spin_20s_linear_infinite] rounded-full border border-dashed border-fuchsia-400/30" />
 
@@ -344,8 +364,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        {/* SCROLL */}
 
         <a
           href="#about"
@@ -453,8 +471,6 @@ export default function Home() {
           </h2>
 
           <div className="mt-14 grid w-full grid-cols-1 gap-8 lg:mt-20 lg:grid-cols-2 lg:gap-12">
-            {/* ABOUT CARD */}
-
             <div className="min-w-0 rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-6 sm:rounded-[2rem] sm:p-10">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-fuchsia-400 text-xl font-black text-black">
@@ -511,8 +527,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* SKILLS */}
-
             <div className="grid min-w-0 gap-4">
               {skills.map((skill) => {
                 const Icon = skill.icon;
@@ -559,8 +573,6 @@ export default function Home() {
         <div className="pointer-events-none absolute left-0 top-1/3 h-80 w-80 rounded-full bg-purple-500/10 blur-[100px]" />
 
         <div className="relative mx-auto w-full max-w-7xl">
-          {/* HEADER */}
-
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.3em] text-fuchsia-400 sm:text-sm sm:tracking-[0.35em]">
@@ -583,8 +595,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* SEARCH */}
-
           <div className="relative z-20 mt-10 w-full">
             <Search
               size={19}
@@ -594,16 +604,12 @@ export default function Home() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) =>
-                setSearchQuery(e.target.value)
-              }
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari judul proyek..."
               aria-label="Cari judul proyek"
               className="w-full min-w-0 rounded-2xl border border-white/10 bg-white/[0.03] py-4 pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400/60 focus:ring-1 focus:ring-fuchsia-400/30 sm:text-base"
             />
           </div>
-
-          {/* FILTER */}
 
           <div className="relative z-20 mt-4 flex w-full flex-wrap gap-2">
             {(
@@ -614,16 +620,13 @@ export default function Home() {
                 "Management System",
               ] as ProjectFilter[]
             ).map((filter) => {
-              const active =
-                activeFilter === filter;
+              const active = activeFilter === filter;
 
               return (
                 <button
                   key={filter}
                   type="button"
-                  onClick={() =>
-                    setActiveFilter(filter)
-                  }
+                  onClick={() => setActiveFilter(filter)}
                   className={`cursor-pointer rounded-full border px-3.5 py-2 text-xs font-semibold transition-all sm:px-5 sm:py-2.5 sm:text-sm ${
                     active
                       ? "border-fuchsia-400 bg-fuchsia-400 text-black"
@@ -646,8 +649,6 @@ export default function Home() {
             })}
           </div>
 
-          {/* RESULT */}
-
           <div className="relative z-20 mt-5 flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-white/30 sm:text-sm">
               Menampilkan{" "}
@@ -657,8 +658,7 @@ export default function Home() {
               dari {projects.length} project
             </p>
 
-            {(searchQuery ||
-              activeFilter !== "All") && (
+            {(searchQuery || activeFilter !== "All") && (
               <button
                 type="button"
                 onClick={resetFilters}
@@ -669,8 +669,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* PROJECT CARDS */}
-
           <div className="relative z-20 mt-8 grid w-full gap-5">
             {filteredProjects.length > 0 ? (
               filteredProjects.map((project) => (
@@ -679,8 +677,6 @@ export default function Home() {
                   className="group relative min-w-0 overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-5 transition-all duration-500 hover:-translate-y-1 hover:border-fuchsia-400/40 hover:bg-fuchsia-400/[0.03] hover:shadow-lg hover:shadow-fuchsia-500/10 sm:rounded-[2rem] sm:p-8 lg:p-10"
                 >
                   <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:items-center lg:gap-8">
-                    {/* NUMBER */}
-
                     <div className="shrink-0 lg:w-24">
                       <span className="text-xs text-fuchsia-400 sm:text-sm">
                         / {project.number}
@@ -696,8 +692,6 @@ export default function Home() {
                         </div>
                       )}
                     </div>
-
-                    {/* CONTENT */}
 
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-[10px] uppercase tracking-[0.2em] text-white/30 sm:text-xs sm:tracking-[0.25em]">
@@ -725,9 +719,7 @@ export default function Home() {
 
                       <button
                         type="button"
-                        onClick={() =>
-                          setSelectedProject(project)
-                        }
+                        onClick={() => setSelectedProject(project)}
                         className="relative z-30 mt-6 inline-flex cursor-pointer items-center gap-2 rounded-full bg-fuchsia-400 px-5 py-3 text-xs font-bold text-black transition hover:scale-105 hover:bg-fuchsia-300 active:scale-95 sm:text-sm"
                       >
                         View Details
@@ -735,13 +727,9 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {/* ARROW */}
-
                     <button
                       type="button"
-                      onClick={() =>
-                        setSelectedProject(project)
-                      }
+                      onClick={() => setSelectedProject(project)}
                       aria-label={`Open ${project.title}`}
                       className="relative z-30 hidden h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border border-white/10 transition duration-300 hover:rotate-45 hover:border-fuchsia-400 hover:bg-fuchsia-400 hover:text-black lg:flex"
                     >
@@ -836,7 +824,8 @@ export default function Home() {
                       type="text"
                       placeholder="Masukkan nama kamu"
                       required
-                      className="box-border w-full min-w-0 rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 sm:px-5 sm:py-4 sm:text-base"
+                      disabled={sending}
+                      className="box-border w-full min-w-0 rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 sm:py-4 sm:text-base"
                     />
                   </div>
 
@@ -854,7 +843,8 @@ export default function Home() {
                       type="email"
                       placeholder="nama@email.com"
                       required
-                      className="box-border w-full min-w-0 rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 sm:px-5 sm:py-4 sm:text-base"
+                      disabled={sending}
+                      className="box-border w-full min-w-0 rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 sm:py-4 sm:text-base"
                     />
                   </div>
 
@@ -872,23 +862,36 @@ export default function Home() {
                       rows={5}
                       placeholder="Tulis pesan kamu di sini..."
                       required
-                      className="box-border w-full min-w-0 resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 sm:px-5 sm:py-4 sm:text-base"
+                      disabled={sending}
+                      className="box-border w-full min-w-0 resize-none rounded-2xl border border-white/10 bg-black/30 px-4 py-3.5 text-sm text-white outline-none transition placeholder:text-white/20 focus:border-fuchsia-400 focus:ring-1 focus:ring-fuchsia-400 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 sm:py-4 sm:text-base"
                     />
                   </div>
 
+                  {/* SUCCESS MESSAGE */}
+
                   {messageSent && (
-                    <div className="rounded-2xl border border-fuchsia-400/30 bg-fuchsia-400/10 p-4 text-sm text-fuchsia-300">
-                      ✓ Pesan berhasil diproses!
+                    <div className="rounded-2xl border border-green-400/30 bg-green-400/10 p-4 text-sm text-green-300">
+                      ✓ Pesan berhasil dikirim! Terima kasih
+                      sudah menghubungi saya.
+                    </div>
+                  )}
+
+                  {/* ERROR MESSAGE */}
+
+                  {messageError && (
+                    <div className="rounded-2xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-300">
+                      {messageError}
                     </div>
                   )}
 
                   <button
                     type="submit"
-                    className="relative z-20 flex w-full cursor-pointer items-center justify-center gap-3 rounded-full bg-fuchsia-400 px-6 py-3.5 text-sm font-bold text-black transition hover:scale-[1.02] hover:bg-fuchsia-300 active:scale-95 sm:py-4"
+                    disabled={sending}
+                    className="relative z-20 flex w-full cursor-pointer items-center justify-center gap-3 rounded-full bg-fuchsia-400 px-6 py-3.5 text-sm font-bold text-black transition hover:scale-[1.02] hover:bg-fuchsia-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 sm:py-4"
                   >
-                    Kirim Pesan
+                    {sending ? "Mengirim..." : "Kirim Pesan"}
 
-                    <ArrowUpRight size={17} />
+                    {!sending && <ArrowUpRight size={17} />}
                   </button>
                 </form>
               </div>
@@ -958,17 +961,11 @@ export default function Home() {
         >
           <div
             className="relative my-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[1.5rem] border border-fuchsia-400/30 bg-[#111111] p-6 shadow-[0_0_80px_rgba(217,70,239,0.25)] sm:rounded-[2rem] sm:p-10"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* CLOSE */}
-
             <button
               type="button"
-              onClick={() =>
-                setSelectedProject(null)
-              }
+              onClick={() => setSelectedProject(null)}
               aria-label="Close project"
               className="absolute right-4 top-4 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:border-fuchsia-400 hover:bg-fuchsia-400 hover:text-black sm:right-5 sm:top-5"
             >
@@ -1003,16 +1000,14 @@ export default function Home() {
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
-                {selectedProject.tech.map(
-                  (tech) => (
-                    <span
-                      key={tech}
-                      className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/50"
-                    >
-                      {tech}
-                    </span>
-                  )
-                )}
+                {selectedProject.tech.map((tech) => (
+                  <span
+                    key={tech}
+                    className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/50"
+                  >
+                    {tech}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -1028,9 +1023,7 @@ export default function Home() {
 
             <button
               type="button"
-              onClick={() =>
-                setSelectedProject(null)
-              }
+              onClick={() => setSelectedProject(null)}
               className="relative z-20 mt-7 cursor-pointer rounded-full bg-fuchsia-400 px-6 py-3 text-sm font-bold text-black transition hover:bg-fuchsia-300 active:scale-95"
             >
               Close Project

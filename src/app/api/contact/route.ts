@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -11,6 +9,7 @@ export async function POST(request: Request) {
     const email = String(body.email || "").trim();
     const pesan = String(body.pesan || "").trim();
 
+    // Validasi input
     if (!nama || !email || !pesan) {
       return NextResponse.json(
         {
@@ -21,7 +20,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validasi email sederhana
+    // Validasi email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email)) {
@@ -34,7 +33,11 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!process.env.RESEND_API_KEY) {
+    // Ambil environment variables
+    const apiKey = process.env.RESEND_API_KEY;
+    const adminEmail = process.env.ADMIN_EMAIL;
+
+    if (!apiKey) {
       console.error("RESEND_API_KEY belum tersedia.");
 
       return NextResponse.json(
@@ -46,7 +49,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!process.env.ADMIN_EMAIL) {
+    if (!adminEmail) {
       console.error("ADMIN_EMAIL belum tersedia.");
 
       return NextResponse.json(
@@ -58,18 +61,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Inisialisasi Resend
+    const resend = new Resend(apiKey);
+
+    // Kirim email
     const { data, error } = await resend.emails.send({
       from: "Portfolio Shintya <onboarding@resend.dev>",
-
-      // Email admin
-      to: [process.env.ADMIN_EMAIL],
-
-      // Ketika admin menekan Reply,
-      // balasan diarahkan ke email pengunjung.
+      to: [adminEmail],
       replyTo: email,
-
       subject: `Pesan Portfolio dari ${nama}`,
-
       html: `
         <!DOCTYPE html>
         <html>
@@ -87,7 +87,6 @@ export async function POST(request: Request) {
               color: #222;
             "
           >
-
             <div
               style="
                 max-width: 600px;
@@ -97,7 +96,6 @@ export async function POST(request: Request) {
                 padding: 30px;
               "
             >
-
               <h2
                 style="
                   margin-top: 0;
@@ -115,25 +113,13 @@ export async function POST(request: Request) {
                 "
               />
 
-              <p>
-                <strong>Nama</strong>
-              </p>
+              <p><strong>Nama</strong></p>
+              <p>${escapeHtml(nama)}</p>
 
-              <p>
-                ${escapeHtml(nama)}
-              </p>
+              <p><strong>Email</strong></p>
+              <p>${escapeHtml(email)}</p>
 
-              <p>
-                <strong>Email</strong>
-              </p>
-
-              <p>
-                ${escapeHtml(email)}
-              </p>
-
-              <p>
-                <strong>Pesan</strong>
-              </p>
+              <p><strong>Pesan</strong></p>
 
               <div
                 style="
@@ -163,14 +149,13 @@ export async function POST(request: Request) {
                 Email ini dikirim melalui contact form
                 Portfolio Shintya.
               </p>
-
             </div>
-
           </body>
         </html>
       `,
     });
 
+    // Cek apakah Resend gagal
     if (error) {
       console.error("Resend error:", error);
 
@@ -183,9 +168,10 @@ export async function POST(request: Request) {
       );
     }
 
+    // Berhasil
     return NextResponse.json({
       success: true,
-      message: "Pesan berhasil dikirim ke admin.",
+      message: "Pesan berhasil dikirim ke email admin.",
       id: data?.id,
     });
   } catch (error) {
