@@ -1,50 +1,588 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tya Portofolio
 
-## Getting Started
+Website portfolio pribadi yang dibuat dengan **Next.js**, **TypeScript**, **Tailwind CSS**, **Supabase**, dan **Resend**.
 
-First, run the development server:
+Project ini digunakan untuk menampilkan profil, skill, project, serta menyediakan form kontak yang menyimpan pesan ke database Supabase dan dapat mengirim notifikasi email melalui Resend.
+
+---
+
+## ✨ Fitur
+
+### 🏠 Landing Page
+- Hero section dengan informasi singkat tentang portfolio.
+- Navigasi ke beberapa bagian halaman.
+- Tampilan responsive untuk desktop dan mobile.
+
+### 👤 About
+- Informasi singkat mengenai pemilik portfolio.
+- Bagian skill yang sekarang dapat diambil langsung dari **Supabase**.
+- Icon skill dapat ditentukan melalui data di database.
+
+### 🛠️ Skill dari Supabase
+Data skill tidak lagi harus ditulis langsung di `page.tsx`.
+
+Data skill disimpan di tabel:
+
+```text
+skill
+```
+
+Setiap skill memiliki:
+- `id`
+- `created_at`
+- `title`
+- `description`
+- `icon`
+
+Icon yang digunakan di frontend dapat berupa:
+- `Code2`
+- `Palette`
+- `Smartphone`
+
+Jika icon dari database tidak dikenali, frontend menggunakan `Code2` sebagai fallback.
+
+### 💻 Project dari Supabase
+Data project diambil dari tabel:
+
+```text
+proyek
+```
+
+Project memiliki:
+- `id`
+- `created_at`
+- `title`
+- `category`
+- `description`
+
+Fitur project:
+- Menampilkan project dari database.
+- Filter berdasarkan kategori.
+- Search project.
+- Detail project melalui modal.
+
+### 📩 Contact Form
+Form kontak menyediakan field:
+- Nama
+- Email
+- Pesan
+
+Saat form dikirim:
+
+```text
+Website
+   ↓
+/api/contact
+   ↓
+Simpan pesan ke Supabase
+   ↓
+Kirim email melalui Resend
+```
+
+Pesan tetap disimpan di Supabase meskipun pengiriman email mengalami masalah.
+
+Frontend juga membedakan kondisi:
+- Pesan berhasil disimpan dan email berhasil dikirim.
+- Pesan berhasil disimpan tetapi email belum/gagal dikirim.
+- Pesan gagal disimpan.
+
+### 🗄️ Supabase
+Supabase digunakan sebagai database untuk:
+- Project
+- Skill
+- Pesan kontak
+
+### 📧 Resend
+Resend digunakan untuk mengirim notifikasi email ketika pengunjung mengirim form kontak.
+
+API key Resend hanya digunakan di server dan **tidak menggunakan prefix `NEXT_PUBLIC_`**.
+
+### 📱 Responsive Design
+Website dibuat agar dapat digunakan pada:
+- Desktop
+- Laptop
+- Tablet
+- Smartphone
+
+---
+
+## 🚀 Teknologi
+
+| Teknologi | Fungsi |
+|---|---|
+| Next.js | Framework utama |
+| React | UI |
+| TypeScript | Type safety |
+| Tailwind CSS | Styling |
+| Supabase | Database |
+| Resend | Pengiriman email |
+| Lucide React | Icon |
+| Vercel | Deployment |
+
+---
+
+## 📁 Struktur Project
+
+Struktur utama project:
+
+```text
+tya-portofolio/
+├── public/
+├── src/
+│   └── app/
+│       ├── api/
+│       │   └── contact/
+│       │       └── route.ts
+│       │
+│       ├── components/
+│       │   ├── ProjectList.tsx
+│       │   └── Projects.tsx
+│       │
+│       ├── lib/
+│       │   └── supabase.ts
+│       │
+│       ├── page.tsx
+│       └── test-supabase/
+│           └── page.tsx
+│
+├── .env.local
+├── .gitignore
+├── next.config.ts
+├── package.json
+├── package-lock.json
+└── README.md
+```
+
+> Folder/file dapat berubah mengikuti perkembangan project.
+
+---
+
+# 🛠️ Instalasi
+
+## 1. Clone Repository
+
+```bash
+git clone https://github.com/ekasdshintya-maker/tya-portofolio-new.git
+```
+
+Masuk ke folder project:
+
+```bash
+cd tya-portofolio-new
+```
+
+---
+
+## 2. Install Dependency
+
+```bash
+npm install
+```
+
+---
+
+## 3. Jalankan Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Kemudian buka:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+# 🔐 Environment Variables
 
-To learn more about Next.js, take a look at the following resources:
+Buat file:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```text
+.env.local
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Isi dengan:
 
-## Deploy on Vercel
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+RESEND_API_KEY=your_resend_api_key
+CONTACT_EMAIL=your_email@gmail.com
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Penjelasan
 
-## Supabase
+#### Supabase
 
-Project ini menggunakan Supabase sebagai database.
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+```
 
-### Tabel: proyek
+Berisi URL project Supabase.
 
-| Kolom | Tipe Data | Keterangan |
-|---|---|---|
-| id | int8 | ID proyek |
-| created_at | timestamptz | Waktu data dibuat |
-| title | text | Judul proyek |
-| category | text | Kategori proyek |
-| desc | text | Deskripsi proyek |
+```env
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+Berisi anon/publishable key Supabase.
+
+#### Resend
+
+```env
+RESEND_API_KEY=
+```
+
+Berisi API key Resend.
+
+**Jangan menggunakan:**
+
+```env
+NEXT_PUBLIC_RESEND_API_KEY=
+```
+
+API key Resend harus tetap menjadi environment variable server-side.
+
+#### Email tujuan
+
+```env
+CONTACT_EMAIL=
+```
+
+Berisi alamat email yang menerima notifikasi dari form kontak.
+
+---
+
+# 🗄️ Database Supabase
+
+## Tabel Project
+
+Buat tabel:
+
+```sql
+create table public.proyek (
+  id bigint generated by default as identity primary key,
+  created_at timestamptz default now(),
+  title text not null,
+  category text not null,
+  description text not null
+);
+```
+
+Aktifkan RLS:
+
+```sql
+alter table public.proyek enable row level security;
+```
+
+Policy untuk membaca project:
+
+```sql
+create policy "Public can read projects"
+on public.proyek
+for select
+to anon, authenticated
+using (true);
+```
+
+---
+
+## Tabel Skill
+
+Buat tabel:
+
+```sql
+create table public.skill (
+  id bigint generated by default as identity primary key,
+  created_at timestamptz default now(),
+  title text not null,
+  description text not null,
+  icon text not null
+);
+```
+
+Aktifkan RLS:
+
+```sql
+alter table public.skill enable row level security;
+```
+
+Policy untuk membaca skill:
+
+```sql
+create policy "Public can read skills"
+on public.skill
+for select
+to anon, authenticated
+using (true);
+```
+
+### Contoh data skill
+
+```sql
+insert into public.skill
+  (title, description, icon)
+values
+  (
+    'Web Development',
+    'Membangun website modern, cepat, dan responsive.',
+    'Code2'
+  ),
+  (
+    'UI / UX Design',
+    'Membuat interface yang menarik dan mudah digunakan.',
+    'Palette'
+  ),
+  (
+    'Responsive Design',
+    'Website nyaman digunakan di HP maupun desktop.',
+    'Smartphone'
+  );
+```
+
+---
+
+## Tabel Pesan Kontak
+
+Buat tabel:
+
+```sql
+create table public.pesan_kontak (
+  id bigint generated by default as identity primary key,
+  created_at timestamptz default now(),
+  nama text not null,
+  email text not null,
+  pesan text not null
+);
+```
+
+Aktifkan RLS:
+
+```sql
+alter table public.pesan_kontak enable row level security;
+```
+
+Policy untuk menerima pesan:
+
+```sql
+create policy "Anyone can send contact message"
+on public.pesan_kontak
+for insert
+to anon, authenticated
+with check (true);
+```
+
+> Tidak perlu membuat policy `SELECT` publik untuk `pesan_kontak` karena pesan kontak merupakan data yang sebaiknya tidak dapat dibaca publik.
+
+---
+
+# 📧 Alur Contact Form
+
+Ketika pengunjung mengirim pesan:
+
+```text
+┌───────────────────┐
+│   Contact Form    │
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│  /api/contact     │
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│ Supabase Database │
+│  pesan_kontak     │
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│      Resend       │
+│   Email Service   │
+└─────────┬─────────┘
+          │
+          ▼
+┌───────────────────┐
+│   Gmail / Email   │
+│      tujuan       │
+└───────────────────┘
+```
+
+Jika konfigurasi Resend belum tersedia:
+- Pesan tetap disimpan ke Supabase.
+- API mengembalikan `emailSent: false`.
+- Frontend dapat menampilkan informasi bahwa database berhasil menerima pesan tetapi email belum terkirim.
+
+---
+
+# 🔒 Keamanan
+
+Beberapa hal penting:
+
+### Jangan commit `.env.local`
+
+Pastikan `.env.local` masuk `.gitignore`.
+
+Contoh:
+
+```gitignore
+.env*
+!.env.example
+```
+
+### Jangan memasukkan API key Resend ke frontend
+
+Gunakan:
+
+```env
+RESEND_API_KEY=
+```
+
+Bukan:
+
+```env
+NEXT_PUBLIC_RESEND_API_KEY=
+```
+
+### Supabase Row Level Security
+
+RLS digunakan untuk membatasi akses tabel.
+
+Untuk `pesan_kontak`, hanya operasi `INSERT` publik yang diperlukan untuk form kontak.
+
+---
+
+# ▶️ Script
+
+Development:
+
+```bash
+npm run dev
+```
+
+Build production:
+
+```bash
+npm run build
+```
+
+Start production:
+
+```bash
+npm start
+```
+
+Lint:
+
+```bash
+npm run lint
+```
+
+---
+
+# ☁️ Deployment Vercel
+
+Project dapat di-deploy ke Vercel.
+
+Setelah repository terhubung dengan Vercel, tambahkan environment variables berikut pada:
+
+```text
+Vercel
+→ Project
+→ Settings
+→ Environment Variables
+```
+
+Tambahkan:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+RESEND_API_KEY
+CONTACT_EMAIL
+```
+
+Pastikan environment **Production** aktif untuk variable yang digunakan deployment production.
+
+Setelah melakukan perubahan:
+
+```bash
+git add .
+git commit -m "update portfolio"
+git push origin main
+```
+
+Vercel akan menjalankan deployment baru dari repository.
+
+---
+
+# 🧪 Testing
+
+Sebelum melakukan deployment, jalankan:
+
+```bash
+npm run build
+```
+
+Jika build berhasil, jalankan:
+
+```bash
+npm run dev
+```
+
+Kemudian periksa:
+
+- Homepage
+- Section About
+- Data skill
+- Data project
+- Search project
+- Filter project
+- Project modal
+- Contact form
+- Penyimpanan pesan di Supabase
+- Pengiriman email melalui Resend
+
+---
+
+# 🔄 Update Project
+
+Alur update yang digunakan:
+
+```bash
+git add .
+git commit -m "deskripsi perubahan"
+git push origin main
+```
+
+Contoh:
+
+```bash
+git add .
+git commit -m "update skill and contact form"
+git push origin main
+```
+
+---
+
+# 👩‍💻 Author
+
+**Shintya**
+
+Portfolio website untuk menampilkan profil, skill, project, dan informasi kontak.
+
+---
+
+## 📌 Status Project
+
+Project sedang dikembangkan dan dapat terus ditambahkan fitur baru seperti:
+
+- Manajemen project melalui Supabase
+- Manajemen skill melalui Supabase
+- Contact form dengan database
+- Email notification
+- Responsive UI
+- Search dan filter project
