@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { createClient } from "@supabase/supabase-js";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function POST(request: Request) {
   try {
@@ -9,173 +17,347 @@ export async function POST(request: Request) {
     const email = String(body.email || "").trim();
     const pesan = String(body.pesan || "").trim();
 
-    // Validasi input
+    // =========================
+    // VALIDASI
+    // =========================
+
     if (!nama || !email || !pesan) {
       return NextResponse.json(
         {
           success: false,
-          message: "Nama, email, dan pesan wajib diisi.",
+          message: "Semua field wajib diisi.",
         },
         { status: 400 }
       );
     }
 
-    // Validasi email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // =========================
+    // SIMPAN KE SUPABASE
+    // =========================
 
-    if (!emailRegex.test(email)) {
+    const { error: supabaseError } = await supabase
+      .from("pesan_kontak")
+      .insert({
+        nama,
+        email,
+        pesan,
+      });
+
+    if (supabaseError) {
+      console.error("SUPABASE ERROR:", supabaseError);
+
       return NextResponse.json(
         {
           success: false,
-          message: "Format email tidak valid.",
+          message: `Pesan gagal disimpan ke database: ${supabaseError.message}`,
         },
-        { status: 400 }
+        { status: 500 }
       );
     }
 
-    // Ambil environment variables
-    const apiKey = process.env.RESEND_API_KEY;
-    const adminEmail = process.env.ADMIN_EMAIL;
+    // =========================
+    // CEK KONFIGURASI RESEND
+    // =========================
 
-    if (!apiKey) {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const targetEmail = process.env.CONTACT_EMAIL;
+
+    if (!resendApiKey) {
       console.error("RESEND_API_KEY belum tersedia.");
 
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Konfigurasi email belum tersedia.",
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        success: true,
+        emailSent: false,
+        message:
+          "Pesan berhasil disimpan ke database, tetapi RESEND_API_KEY belum tersedia.",
+      });
     }
 
-    if (!adminEmail) {
-      console.error("ADMIN_EMAIL belum tersedia.");
+    if (!targetEmail) {
+      console.error("CONTACT_EMAIL belum tersedia.");
 
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Email admin belum dikonfigurasi.",
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        success: true,
+        emailSent: false,
+        message:
+          "Pesan berhasil disimpan ke database, tetapi CONTACT_EMAIL belum tersedia.",
+      });
     }
 
-    // Inisialisasi Resend
-    const resend = new Resend(apiKey);
+    // =========================
+    // KIRIM EMAIL
+    // =========================
 
-    // Kirim email
-    const { data, error } = await resend.emails.send({
-      from: "Portfolio Shintya <onboarding@resend.dev>",
-      to: [adminEmail],
-      replyTo: email,
-      subject: `Pesan Portfolio dari ${nama}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8" />
-            <title>Pesan Portfolio</title>
-          </head>
+    const { data: emailData, error: emailError } =
+      await resend.emails.send({
+        from: "Portfolio <onboarding@resend.dev>",
+        to: [targetEmail],
+        subject: `Pesan Baru dari ${nama}`,
+        replyTo: email,
 
-          <body
-            style="
-              margin: 0;
-              padding: 30px;
-              background: #080808;
-              font-family: Arial, sans-serif;
-              color: #222;
-            "
-          >
-            <div
-              style="
-                max-width: 600px;
-                margin: auto;
-                background: #ffffff;
-                border-radius: 16px;
-                padding: 30px;
-              "
-            >
-              <h2
-                style="
-                  margin-top: 0;
-                  color: #c026d3;
-                "
-              >
-                Pesan Baru dari Portfolio Shintya
-              </h2>
+        html: `
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pesan Baru dari Portfolio</title>
+</head>
 
-              <hr
-                style="
-                  border: none;
-                  border-top: 1px solid #eeeeee;
-                  margin: 20px 0;
-                "
-              />
+<body
+  style="
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f5;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #18181b;
+  "
+>
+  <div
+    style="
+      max-width: 650px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    "
+  >
 
-              <p><strong>Nama</strong></p>
-              <p>${escapeHtml(nama)}</p>
+    <!-- HEADER -->
+    <div
+      style="
+        background-color: #18181b;
+        padding: 36px 32px;
+        text-align: center;
+      "
+    >
+      <div
+        style="
+          display: inline-block;
+          padding: 8px 14px;
+          border: 1px solid #3f3f46;
+          border-radius: 999px;
+          color: #ffffff;
+          font-size: 11px;
+          letter-spacing: 1.5px;
+          margin-bottom: 18px;
+        "
+      >
+        PORTFOLIO CONTACT
+      </div>
 
-              <p><strong>Email</strong></p>
-              <p>${escapeHtml(email)}</p>
+      <h1
+        style="
+          margin: 0;
+          color: #ffffff;
+          font-size: 28px;
+          line-height: 1.3;
+          font-weight: 700;
+        "
+      >
+        Pesan Baru
+      </h1>
 
-              <p><strong>Pesan</strong></p>
+      <p
+        style="
+          margin: 10px 0 0;
+          color: #a1a1aa;
+          font-size: 14px;
+          line-height: 1.6;
+        "
+      >
+        Ada seseorang yang menghubungi portfolio kamu.
+      </p>
+    </div>
 
-              <div
-                style="
-                  background: #f7f7f7;
-                  border-radius: 10px;
-                  padding: 15px;
-                  line-height: 1.6;
-                "
-              >
-                ${escapeHtml(pesan).replace(/\n/g, "<br />")}
-              </div>
+    <!-- CONTENT -->
+    <div style="padding: 32px;">
 
-              <hr
-                style="
-                  border: none;
-                  border-top: 1px solid #eeeeee;
-                  margin: 20px 0;
-                "
-              />
+      <!-- INFORMASI PENGIRIM -->
+      <div
+        style="
+          background-color: #fafafa;
+          border: 1px solid #e4e4e7;
+          border-radius: 12px;
+          padding: 20px;
+          margin-bottom: 28px;
+        "
+      >
 
-              <p
-                style="
-                  font-size: 13px;
-                  color: #777;
-                "
-              >
-                Email ini dikirim melalui contact form
-                Portfolio Shintya.
-              </p>
-            </div>
-          </body>
-        </html>
-      `,
-    });
+        <p
+          style="
+            margin: 0 0 7px;
+            color: #71717a;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          "
+        >
+          Nama
+        </p>
 
-    // Cek apakah Resend gagal
-    if (error) {
-      console.error("Resend error:", error);
+        <p
+          style="
+            margin: 0;
+            color: #18181b;
+            font-size: 17px;
+            font-weight: 600;
+          "
+        >
+          ${nama}
+        </p>
 
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Pesan gagal dikirim. Silakan coba lagi.",
-        },
-        { status: 500 }
-      );
+        <div
+          style="
+            height: 1px;
+            background-color: #e4e4e7;
+            margin: 18px 0;
+          "
+        ></div>
+
+        <p
+          style="
+            margin: 0 0 7px;
+            color: #71717a;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          "
+        >
+          Email
+        </p>
+
+        <a
+          href="mailto:${email}"
+          style="
+            color: #18181b;
+            font-size: 15px;
+            text-decoration: underline;
+          "
+        >
+          ${email}
+        </a>
+
+      </div>
+
+      <!-- PESAN -->
+      <div>
+
+        <p
+          style="
+            margin: 0 0 10px;
+            color: #71717a;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          "
+        >
+          Pesan
+        </p>
+
+        <div
+          style="
+            background-color: #fafafa;
+            border-left: 4px solid #18181b;
+            border-radius: 8px;
+            padding: 20px;
+            color: #3f3f46;
+            font-size: 15px;
+            line-height: 1.8;
+            word-break: break-word;
+          "
+        >
+          ${pesan.replace(/\n/g, "<br />")}
+        </div>
+
+      </div>
+
+      <!-- BUTTON -->
+      <div
+        style="
+          text-align: center;
+          margin-top: 30px;
+        "
+      >
+
+        <a
+          href="mailto:${email}?subject=Re: Pesan dari Portfolio"
+          style="
+            display: inline-block;
+            background-color: #18181b;
+            color: #ffffff;
+            padding: 13px 26px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+          "
+        >
+          Balas Pesan
+        </a>
+
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div
+      style="
+        border-top: 1px solid #e4e4e7;
+        padding: 22px 32px;
+        text-align: center;
+      "
+    >
+
+      <p
+        style="
+          margin: 0;
+          color: #a1a1aa;
+          font-size: 12px;
+          line-height: 1.7;
+        "
+      >
+        Pesan ini dikirim melalui website portfolio.
+        <br />
+        © 2026 Shintya Portfolio
+      </p>
+
+    </div>
+
+  </div>
+</body>
+</html>
+        `,
+      });
+
+    // =========================
+    // CEK HASIL RESEND
+    // =========================
+
+    if (emailError) {
+      console.error("RESEND ERROR:", emailError);
+
+      return NextResponse.json({
+        success: true,
+        emailSent: false,
+        message:
+          "Pesan berhasil disimpan ke database, tetapi email gagal dikirim.",
+      });
     }
 
-    // Berhasil
+    console.log("EMAIL BERHASIL DIKIRIM:", emailData);
+
     return NextResponse.json({
       success: true,
-      message: "Pesan berhasil dikirim ke email admin.",
-      id: data?.id,
+      emailSent: true,
+      message: "Pesan berhasil dikirim.",
     });
   } catch (error) {
-    console.error("Contact API error:", error);
+    console.error("CONTACT API ERROR:", error);
 
     return NextResponse.json(
       {
@@ -185,17 +367,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
-
-/**
- * Mencegah HTML dari input user
- * masuk langsung ke email.
- */
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }

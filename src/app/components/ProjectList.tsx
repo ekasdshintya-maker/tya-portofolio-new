@@ -1,9 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { projects } from "@/app/data/project";
 
-export default function ProjectList() {
+type Project = {
+  id: number;
+  title: string;
+  category: string;
+  desc: string;
+};
+
+type ProjectListProps = {
+  projects: Project[];
+};
+
+export default function ProjectList({
+  projects,
+}: ProjectListProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
 
@@ -34,6 +46,7 @@ export default function ProjectList() {
       {/* Filter */}
       <div className="mb-8 flex gap-3">
         <button
+          type="button"
           onClick={() => setCategory("All")}
           className={`rounded-full px-5 py-2 transition ${
             category === "All"
@@ -45,6 +58,7 @@ export default function ProjectList() {
         </button>
 
         <button
+          type="button"
           onClick={() => setCategory("Featured")}
           className={`rounded-full px-5 py-2 transition ${
             category === "Featured"
@@ -56,6 +70,7 @@ export default function ProjectList() {
         </button>
 
         <button
+          type="button"
           onClick={() => setCategory("School")}
           className={`rounded-full px-5 py-2 transition ${
             category === "School"
@@ -83,7 +98,7 @@ export default function ProjectList() {
             </h3>
 
             <p className="text-gray-600">
-              {project.description}
+              {project.desc}
             </p>
           </div>
         ))}
