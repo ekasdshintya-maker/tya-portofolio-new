@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const BASE_URL = "https://tya-portofolio-new-5638.vercel.app";
+const BASE_URL = "https://www.tyaportfolio.my.id";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
