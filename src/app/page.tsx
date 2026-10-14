@@ -139,7 +139,7 @@ export default function Home() {
         className="absolute inset-0 h-full w-full object-cover object-center"
       >
         <source
-          src="/video/breakbeat1.mp4"
+          src="/video/bg1.mp4"
           type="video/mp4"
         />
       </video>
