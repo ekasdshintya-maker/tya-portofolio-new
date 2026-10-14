@@ -127,21 +127,23 @@ export default function Home() {
       ===================================================== */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#080808]">
 
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-          src="/dj2\\
-          
-          .mp4"
-        >
-          <source src="/dj2.mp4" type="video/mp4" />
-        </video>
+       
+      <video
+        ref={videoRef}
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover object-center"
+      >
+        <source
+          src="/video/breakbeat1.mp4"
+          type="video/mp4"
+        />
+      </video>
+
 
         {/* Ambient Dark Overlay (balanced so video is clearly visible while text stays crisp) */}
         <div className="absolute inset-0 bg-black/50" />
@@ -323,25 +325,38 @@ export default function Home() {
               </div>
 
               {/* PROFILE IMAGE */}
-              <div className="mx-auto w-full max-w-md lg:ml-auto">
+              <div className="mx-auto w-full max-w-md">
+                <div className="group relative aspect-square overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-fuchsia-500/10">
 
-                <div className="relative aspect-square overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-2xl shadow-fuchsia-500/10">
-
+                  {/* FOTO PERTAMA */}
                   <Image
-                    src="/cute.jpeg"
-                    alt="Foto profil Shintya, Creative Web Developer"
-                    width={500}
-                    height={500}
+                    src="/kiyut.jpeg"
+                    alt="Foto profil Shintya"
+                    fill
                     priority
-                    className="h-full w-full object-cover"
+                    sizes="(max-width: 768px) 100vw, 448px"
+                    className="object-cover transition-all duration-700 group-hover:scale-105 group-hover:opacity-0"
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  {/* FOTO KEDUA */}
+                  <Image
+                    src="/ft3.jpeg"
+                    alt="Foto kedua Shintya"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 448px"
+                    className="object-cover opacity-0 transition-all duration-700 group-hover:scale-100 group-hover:opacity-100"
+                  />
+
+                  {/* LAPISAN GRADIENT */}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+                  {/* IKON PANAH */}
+                  <div className="absolute bottom-5 right-5 flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-all duration-300 group-hover:rotate-45 group-hover:bg-fuchsia-500">
+                    <ArrowUpRight className="h-6 w-6" />
+                  </div>
 
                 </div>
-
               </div>
-
             </div>
 
             {/* MUSIC PLAYER */}
